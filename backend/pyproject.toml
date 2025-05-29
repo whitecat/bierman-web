@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "backend"
+version = "0.1.0"
+description = "Bierman"
+authors = ["C Albert <c.albert.thompson01@gmail.com>"]
+packages = [{include = "backend"}]
+
+[tool.poetry.dependencies]
+python = "^3.11.7"
+django = "^5.1.5"
+python-dotenv = "^1.0.1"
+django-cors-headers = "^4.6.0"
+requests = "^2.31.0"  # Added requests library
+javalang = "^0.13.0"
+kopyt = "^0.0.2"
+openai = "^1.30.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
