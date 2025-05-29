@@ -12,55 +12,47 @@ const App: React.FC = () => {
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
     const backendApiUrl = import.meta.env.VITE_BACKEND_API_URL;
 
-    const handleSearch = () => {
+    const analyzeAndProcess = async (analyzeFn: () => Promise<any>) => {
         setQuestions([]);
         setIsLoading(true);
+        try {
+            const result = await analyzeFn();
+            if (result && Array.isArray(result.questions)) {
+                setQuestions(result.questions);
+                setErrorMsg(null);
+            } else if (Array.isArray(result)) {
+                setQuestions(result);
+                setErrorMsg(null);
+            } else if (result && result.error) {
+                setQuestions([]);
+                setErrorMsg(result.error);
+            }
+        } catch {
+            setQuestions([]);
+            setErrorMsg('An error occurred.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
-        analyzeCodebaseByUrl(backendApiUrl, searchTerm, { llm: useLLM, focus })
-            .then(result => {
-                if (result && Array.isArray(result.questions)) {
-                    setQuestions(result.questions);
-                } else if (Array.isArray(result)) {
-                    setQuestions(result);
-                } else if (result && result.error) {
-                    setQuestions([{ question: result.error, answer: '', difficulty: '', component: '', type: '' }]);
-                }
-            })
-            .catch(_ => {
-                setQuestions([{ question: 'An error occurred.', answer: '', difficulty: '', component: '', type: '' }]);
-            })
-            .finally(() => {
-                setIsLoading(false);
-            });
+    const handleSearch = () => {
+        void analyzeAndProcess(() =>
+            analyzeCodebaseByUrl(backendApiUrl, searchTerm, { llm: useLLM, focus })
+        );
+    };
+
+    const handleFileAnalyze = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!file) return;
+        void analyzeAndProcess(() =>
+            analyzeCodebaseByFile(backendApiUrl, file, { llm: useLLM, focus })
+        );
     };
 
     const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files.length > 0) {
             setFile(e.target.files[0]);
         }
-    };
-
-    const handleFileAnalyze = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!file) return;
-        setQuestions([]);
-        setIsLoading(true);
-        analyzeCodebaseByFile(backendApiUrl, file, { llm: useLLM, focus })
-            .then(result => {
-                if (result && Array.isArray(result.questions)) {
-                    setQuestions(result.questions);
-                } else if (Array.isArray(result)) {
-                    setQuestions(result);
-                } else if (result && result.error) {
-                    setQuestions([{ question: result.error, answer: '', difficulty: '', component: '', type: '' }]);
-                }
-            })
-            .catch(_ => {
-                setQuestions([{ question: 'An error occurred.', answer: '', difficulty: '', component: '', type: '' }]);
-            })
-            .finally(() => {
-                setIsLoading(false);
-            });
     };
 
     return (
@@ -70,14 +62,21 @@ const App: React.FC = () => {
                 className="flex items-center space-x-4 mb-4"
                 onSubmit={e => {
                     e.preventDefault();
-                    if (searchTerm) {
-                        setErrorMsg(null);
-                        handleSearch();
-                    } else if (file) {
-                        setErrorMsg(null);
-                        handleFileAnalyze(e);
-                    } else {
+                    const hasUrl = !!searchTerm;
+                    const hasFile = !!file;
+                    if (hasUrl && hasFile) {
+                        setErrorMsg('Please provide either a URL or upload a zip file, not both.');
+                        return;
+                    }
+                    if (!hasUrl && !hasFile) {
                         setErrorMsg('Please enter a URL or upload a zip file.');
+                        return;
+                    }
+                    setErrorMsg(null);
+                    if (hasUrl) {
+                        handleSearch();
+                    } else if (hasFile) {
+                        handleFileAnalyze(e);
                     }
                 }}
             >
@@ -97,8 +96,18 @@ const App: React.FC = () => {
                     className="hidden"
                 />
                 <span className="mx-2 text-gray-500 font-semibold">or</span>
-                <label htmlFor="file-upload" className="p-3 border border-gray-300 rounded-md w-[220px] bg-white cursor-pointer text-center">
-                    {file ? file.name : 'Upload file'}
+                <label htmlFor="file-upload" className="p-3 border border-gray-300 rounded-md w-[220px] bg-white cursor-pointer text-center flex items-center justify-between">
+                    <span className="truncate">{file ? file.name : 'Upload file'}</span>
+                    {file && (
+                        <button
+                            type="button"
+                            className="ml-2 text-gray-400 hover:text-red-600 focus:outline-none"
+                            onClick={() => setFile(null)}
+                            aria-label="Clear file"
+                        >
+                            ×
+                        </button>
+                    )}
                 </label>
                 <label className="flex items-center space-x-2">
                     <input
@@ -127,7 +136,7 @@ const App: React.FC = () => {
             {errorMsg && (
                 <div className="text-red-600 font-semibold mb-2">{errorMsg}</div>
             )}
-            {questions && questions.length > 0 && (
+            {questions && questions.length > 0 && !errorMsg && (
                 <div className="bg-white rounded-lg shadow-md p-6 w-full max-w-2xl mt-6">
                     <h2 className="text-2xl font-semibold mb-4">Generated Questions</h2>
                     <ul className="space-y-4">

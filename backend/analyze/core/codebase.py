@@ -25,6 +25,6 @@ class CodebaseExtractor:
                     self.file_paths.append(os.path.join(root, f))
         return self.file_paths, self.temp_dir
 
-    # def cleanup(self):
-    #     import shutil
-    #     shutil.rmtree(self.temp_dir)
+    def cleanup(self):
+        import shutil
+        shutil.rmtree(self.temp_dir)

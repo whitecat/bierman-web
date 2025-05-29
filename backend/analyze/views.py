@@ -38,6 +38,9 @@ def analyze_url_view(request):
             return JsonResponse({'error': 'Missing url'}, status=400)
         extractor = CodebaseExtractor(url)
         files, temp_dir = extractor.extract()
+        if not files:
+            shutil.rmtree(temp_dir)
+            return JsonResponse({'error': 'No files'}, status=400)
         questions = _analyze_codebase(files, temp_dir, use_llm=use_llm, focus=focus)
         shutil.rmtree(temp_dir)
         return JsonResponse({'questions': questions})
@@ -62,7 +65,9 @@ def analyze_file_view(request):
             with zipfile.ZipFile(zip_path, 'r') as zip_ref:
                 zip_ref.extractall(temp_dir)
             extractor = CodebaseExtractor(zip_path)
-            files, _ = extractor.extract()
+            files, temp_dir = extractor.extract()
+            if not files:
+                return JsonResponse({'error': 'No files'}, status=400)
             questions = _analyze_codebase(files, temp_dir, use_llm=use_llm, focus=focus, openai_api_key=openai_api_key)
         return JsonResponse({'questions': questions})
     except Exception as e:

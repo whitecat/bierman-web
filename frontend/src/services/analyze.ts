@@ -18,7 +18,7 @@ export const analyzeCodebaseByUrl = async (
     });
     if (!response.ok) {
         const errorBody = await response.json();
-        throw new Error(`Error ${response.status}: ${errorBody.error}`);
+        return { error: errorBody.error };
     }
     return await response.json();
 };
@@ -40,7 +40,7 @@ export const analyzeCodebaseByFile = async (
     });
     if (!response.ok) {
         const errorBody = await response.json();
-        throw new Error(`Error ${response.status}: ${errorBody.error}`);
+        return { error: errorBody.error };
     }
     return await response.json();
 };
