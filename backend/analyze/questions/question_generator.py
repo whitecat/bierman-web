@@ -2,6 +2,7 @@ import os
 import openai
 import re
 import json
+import random
 
 class RuleBasedQuestionGenerator:
     @staticmethod
@@ -19,6 +20,7 @@ class RuleBasedQuestionGenerator:
             ('advanced', 'How could the {type} `{name}` be optimized or improved?',
              'Potential optimizations for `{name}` could include refactoring, improving efficiency, or enhancing documentation.')
         ]
+        random.shuffle(components)
         idx = 0
         while len(questions) < 10 and components:
             c = components[idx % len(components)]
