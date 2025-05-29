@@ -6,6 +6,12 @@ import random
 
 class RuleBasedQuestionGenerator:
     @staticmethod
+    def _name_with_file(c):
+        if c['type'] == 'function':
+            return f"{c['name']}` in `{c['file']}"
+        return c['name']
+
+    @staticmethod
     def generate(components, focus=None):
         if focus:
             filtered = [c for c in components if focus.lower() in (c['docstring'] or '').lower() or focus.lower() in c['name'].lower()]
@@ -13,21 +19,21 @@ class RuleBasedQuestionGenerator:
                 components = filtered
         questions = []
         templates = [
-            ('beginner', 'What is the purpose of the {type} `{name}` in {file}?',
+            ('beginner', 'What is the purpose of the {type} `{name_updated}`?',
              'The {type} `{name}` is defined in {file} at line {lineno}. This component is responsible for implementing its declared functionality.'),
-            ('intermediate', 'How does the {type} `{name}` interact with other components?',
-             'The {type} `{name}` may interact with other classes or functions in the codebase.'),
-            ('advanced', 'How could the {type} `{name}` be optimized or improved?',
-             'Potential optimizations for `{name}` could include refactoring, improving efficiency, or enhancing documentation.')
+            ('intermediate', 'How does the {type} `{name_updated}` interact with other components?',
+             'The {type} `{name_updated}` may interact with other classes or functions in the codebase.'),
+            ('advanced', 'How could the {type} `{name_updated}` be optimized or improved?',
+             'Potential optimizations for `{name_updated}` could include refactoring, improving efficiency, or enhancing documentation.')
         ]
         random.shuffle(components)
         idx = 0
         while len(questions) < 10 and components:
             c = components[idx % len(components)]
             t = templates[idx % len(templates)]
-            docstring_or_default = c['docstring'] if c['docstring'] else 'No documentation provided.'
-            q = t[1].format(**c, docstring_or_default=docstring_or_default)
-            a = t[2].format(**c, docstring_or_default=docstring_or_default)
+            name_with_file = RuleBasedQuestionGenerator._name_with_file(c)
+            q = t[1].format(**c, name_updated=name_with_file)
+            a = t[2].format(**c, name_updated=name_with_file)
             questions.append({
                 'question': q,
                 'answer': a,
