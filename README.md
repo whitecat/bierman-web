@@ -1,6 +1,6 @@
 # Beirman Web Project
 
-This repository contains a Django backend and a React frontend (using Vite) for the Beirman web application. The backend handles property data and analysis, while the frontend provides a modern user interface.
+This repository contains a Django backend and a React frontend (using Vite) for the Beirman web application. Note: The analysis features only support projects containing .kt, .py, or .java files. The backend handles property data and analysis, while the frontend provides a modern user interface.
 
 ## Prerequisites
 
@@ -67,6 +67,28 @@ DJANGO_DEBUG=True
 ALLOWED_HOSTS=localhost,127.0.0.1
 OPENAI_API_KEY=your_openai_api_key
 ```
+
+**Step 3:** Install and Start a Poetry Shell
+To install the Poetry Shell, run:
+
+```bash
+poetry self add poetry-plugin-shell
+```
+
+To activate the virtual environment, run:
+
+```bash
+poetry shell
+```
+
+**Step 4:** Run the Backend
+Once inside the Poetry shell, start the Django server:
+
+```bash
+python manage.py runserver
+```
+The backend will now be running at [http://localhost:8000](http://localhost:8000).
+
 ### Frontend (React + Vite) Setup
 
 The frontend is a React app powered by Vite.
